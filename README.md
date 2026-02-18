@@ -1,176 +1,107 @@
-# JungleConfig
+# JungleConfig 🌴
 
-**JungleConfig** is a **modular, swappable, lightweight, dependency-free, platform-agnostic, and format-agnostic** configuration framework for Java.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java Version](https://img.shields.io/badge/Java-19%2B-blue.svg)](https://www.oracle.com/java/technologies/javase-jdk19-downloads.html)
 
-It’s not just another config library.  
-It’s a **configuration engine** — designed to work *anywhere*, store *anything*, and adapt *instantly*.
+**JungleConfig** is a high-performance, developer-friendly configuration management library for Java. It goes beyond simple key-value storage by providing a **fully swappable, modular architecture** that allows you to customize every layer—from storage backends to data formats—without changing your application code.
 
-Whether you're building a desktop app, an embedded system, or a secure microservice — JungleConfig gives you **full control** over how, where, and what you store.
-
----
-
-## 🌟 Main Features
-
-### 1. Unified Configuration API
-- **Fluent and intuitive** interface:
-  ```java
-  config.Set("user.name", "Himansa").Set("user.age", 19);
-  String name = config.get("user.name", String.class);
-  Optional<Integer> age = config.Get("user.age", Integer.class);
-  ```
-- Supports **every data type**:
-  - **Primitives**: `int`, `boolean`, `char`, `LocalDate`, etc.
-  - **POJOs** (via Jackson or custom adapters)
-  - **Collections**: `List`, `Map`, etc.
-  - **Custom types** (via `TypeConverterAdapter`)
-- **Optional<T> support** for safe, null-free access
+Built with reliability in mind, JungleConfig features multi-layer caching, ACID-like transactions, and robust security.
 
 ---
 
-### 2. Pluggable Persistence Architecture
+## 🏗️ Architecture: The Swappable Philosophy
 
-JungleConfig is built on **interfaces, not assumptions**.  
-Swap any layer — change where or how data is stored — **without touching your business logic**.
+The core strength of JungleConfig is its "LEGO-like" modularity. Every component is an interface that can be swapped or extended:
 
-#### 🔹 `IOHandlerInterface` — Where is data saved?
-- Manages low-level **read/write operations**
-- Fully swappable — store config in:
-  - Files ✅
-  - REST endpoints 🌐
-  - EEPROM / SPI Flash 💾 (embedded systems)
-  - Images, videos, QR codes 🖼️ (steganography)
-  - In-memory (for testing)
+- **IO Handlers**: Change *where* data is stored. Swap a local `File` handler for a `RESTIOHandler` (to save to an endpoint), a `DatabaseIOHandler`, or `S3IOHandler`.
+- **Converters**: Change *how* data is formatted. Swap the default JSON structure for `XML`, `YAML`, or even a custom binary format.
+- **Type Adapters**: Extend *what* can be stored. Add support for any custom class by implementing a simple `TypeConverterAdapter`.
+- **Service Layers**: Decorate the core with optional features like `NativeEncryptedConverter`, `NativeExtendedCache`, or `NativeInternalTransaction`.
 
-**Built-in IO Handlers:**
-- `NativeIOHandler` — Saves to file
-- `InMemoryIOHandler` — In-memory storage (perfect for unit tests)
+**The API remains constant.** Your code calls `config.get()` and `config.set()`, regardless of whether the data is in an encrypted file on disk or a flat JSON map in a remote cloud service.
 
 ---
 
-#### 🔹 `ConverterInterface` — How is data encoded?
-- Converts internal `TypeMap` to raw format and back
-- Swap to support different **languages and formats**:
-  - `Key:type=value` (default)
-  - JSON, XML, YAML, INI, CSV, HTML
-  - Binary, encrypted blobs, custom formats
+## ⚡ Key Features
 
-**Built-in Converters:**
-- `NativeConverter` — Uses `key:type=value` format
-  - POJOs → JSON (URL-encoded)
-  - Type-safe with tags: `user.age:Integer=19`
-- `NativeFlatJsonConverter` — Stores entire config as flat JSON
+- � **Fully Modular**: Swap IO, Formats, Caching, and Security layers effortlessly.
+- �🔐 **Solid Security**: AES-256 GCM encryption with PBKDF2 key derivation.
+- 🔄 **ACID Transactions**: Atomic operations with `commit()` and `rollback()` support.
+- 🚀 **Multi-Layer Caching**: High-speed internal and extended caching for near-zero latency.
+- 🛠️ **Rich Type Support**: Built-in adapters for Primitives, UUID, Java 8 Time API, and POJOs.
+-  **Regex Querying**: Powerful key/value/type searching using regular expressions.
+- 💾 **Safe Persistence**: Automatic backups and atomic write operations.
 
 ---
 
-#### 🔹 `CacheInterface` — Caching & Transaction Layer
+## � Quick Start: The "Custom Stack"
 
-Split into two clean interfaces for maximum flexibility:
-
-##### 📦 `InternalCacheInterface`
-- Pure caching contract
-- Plug in any caching library: Caffeine, Redis, Ehcache, or custom
-- Enables fast, consistent reads
-
-**Built-in Caches:**
-- `NativeInternalCache` — Lightweight, counter-based cache
-  - Auto-flush after N writes
-  - Auto-reload after N reads to avoid staleness
-
-##### ⚙️ `InternalServiceInterface`
-- Handles **transactions**, **queries**, and **metadata**
-- Swap transaction models or query engines easily
-
-**Built-in Services:**
-- `NativeInternalTransaction` — Full transaction support:
-  - `BeginTransaction()`
-  - `Commit()`, `Rollback()`, `EndTransaction()`
-  - Safe, staged updates with rollback-to-savepoint
-
-##### 🧩 Combined: `NativeExtendedCache`
-- **Recommended**: Combines `InternalCache` + `InternalService`
-- Modern, modular, and extensible
-- Replaces the old monolithic `NativeCache`
-
-> 💡 **Legacy Note**: `NativeCache` is the original all-in-one implementation — still works, but deprecated in favor of the split model.
-
----
-
-### 3. Type System & Adapters
-
-#### 🔁 `TypeConverter` + `TypeConverterAdapter`
-- Efficient, type-safe conversion without forcing Jackson
-- Use **custom adapters** for domain types:
-  - `Color`, `Path`, `Duration`, `Enum`, etc.
-- Jackson is **optional** — used only when needed (e.g., POJOs)
-
-**Built-in Adapters:**
-- `NativeBooleanAdapter`
-- `NativeStringAdapter`
-- `NativeIntegerAdapter`
-- (Extensible — add your own!)
-
----
-
-## 🆚 Why JungleConfig Is Different
-
-| Feature | Most Config Libraries | JungleConfig |
-|--------|------------------------|------------|
-| **Extensibility** | Fixed format & storage | Swap **anything** via interfaces |
-| **Transactions** | ❌ None | ✅ Full support with rollback |
-| **Type Safety** | Strings only | ✅ `key:type=value` tagging |
-| **Caching** | ❌ None or basic | ✅ Smart, auto-syncing |
-| **Storage Flexibility** | File-only | ✅ File, REST, image, EEPROM, etc. |
-| **Format Support** | JSON/Properties | ✅ Any format via `Converter` |
-| **Zero Dependencies** | Often need frameworks | ✅ Pure Java (Jackson optional) |
-
----
-
-## 🚀 Use Cases
-
-- **Desktop Apps** — Save user settings safely
-- **Embedded Systems** — Run on microcontrollers with EEPROM
-- **Secure Services** — Use encrypted config
-- **Dynamic Tools** — Query and introspect config at runtime
-- **Testing** — In-memory mode for fast, isolated tests
-- **Creative Storage** — Hide config in images, videos, or audio
-
----
-
-## 💡 Design Philosophy
-
-> **"The data is yours. The format is yours. The storage is yours.  
-> JungleConfig just helps you manage it — without getting in the way."**
-
-It’s not about enforcing rules.  
-It’s about **giving you freedom** — with structure.
-
----
-
-## 🛠️ Getting Started (Example)
+While JungleConfig provides convenient factory methods like `InMemoryConfig()`, its true power lies in manual assembly for custom needs:
 
 ```java
-File configFile = new File("app.conf");
-JungleConfig config = new JungleConfig(configFile);
-
-config.Set("user.name", "Himansa");
-config.Set("app.debug", true);
-config.SetPOJO("user.profile", new User("Himansa", 19));
-
-String name = config.get("user.name", String.class);
-User profile = config.get("user.profile", User.class);
+// Example: Creating a custom stack with a remote REST backend and XML formatting
+JungleConfig config = new JungleConfig(
+    new NativeTypeConverter(
+        new NativeExtendedCache(
+            new NativeInternalTransaction(
+                new NativeInternalCache(
+                    new CustomXmlConverter(          // Swapped Converter
+                        new RestIOHandler(endpoint)   // Swapped IO Handler
+                    ), 10, 100, true
+                )
+            )
+        ), true, getMyCustomAdapters()               // Custom Type Support
+    )
+);
 ```
-
-Want encryption? Just swap the converter:
-```java
-JungleConfig encrypted = JungleConfig.EncryptedConfig(file, "s3cr3t");
-```
-
-Want REST? Just plug in your `RestIOHandler`.
 
 ---
 
-## 🌿 JungleConfig: Config With Claws.
+## 🛡️ Usage Highlights
 
-Flexible. Fast. Fierce.
+### 1. Simple Primitives & POJOs
+```java
+config.Set("server.port", 8080);
+config.SetPOJO("auth.admin", new User("Himansa", 19));
 
-> *"It's not a config library. It's a persistence engine."*
+int port = config.get("server.port", Integer.class);
+User admin = config.get("auth.admin", User.class);
+```
+
+### 2. Transaction Management
+Ensures atomicity across multiple configuration changes.
+```java
+config.BeginTransaction();
+try {
+    config.Set("system.status", "MAINTENANCE");
+    config.Commit();
+} catch (Exception e) {
+    config.Rollback();
+}
+```
+
+### 3. Integrated Security
+```java
+JungleConfig secureConfig = JungleConfig.EncryptedConfig(file, "password");
+secureConfig.Set("db.password", "secret");
+```
+
+---
+
+## 📖 API Summary
+
+- `Set(key, value)` / `SetPOJO(key, object)`: Store data.
+- `Get(key, class)`: Retrieve as `Optional<T>`.
+- `getCollection(key, typeRef)`: Retrieve complex collections (e.g., `List<User>`).
+- `query(keyReg, typeReg, valReg)`: Find keys using Regex.
+- `Backup(file, override)`: Export current state.
+- `BeginTransaction()` / `Commit()` / `Rollback()`: Manage atomic updates.
+
+---
+
+## ⚖️ License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+<p align="center">Made with ❤️ by CodeHack</p>

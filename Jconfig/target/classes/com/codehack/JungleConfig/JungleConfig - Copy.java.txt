@@ -1,12 +1,9 @@
 package com.codehack.JungleConfig;
 
-import com.codehack.JungleConfig.Core.Adapters.*;
-import com.codehack.JungleConfig.Core.Implim.Cache.*;
-import com.codehack.JungleConfig.Core.Implim.Converter.*;
-import com.codehack.JungleConfig.Core.Implim.IO.*;
-import com.codehack.JungleConfig.Core.Implim.Service.*;
-import com.codehack.JungleConfig.Core.Implim.TypeConverter.*;
-import com.codehack.JungleConfig.Core.TypeConverterAdapter;
+import com.codehack.JungleConfig.Core.Adapters.NativeBooleanAdapter;
+import com.codehack.JungleConfig.Core.Adapters.NativeIntagerAdapter;
+import com.codehack.JungleConfig.Core.Adapters.NativeStringAdapter;
+import com.codehack.JungleConfig.Core.Implim.*;
 import com.codehack.JungleConfig.Core.InternalServiceInterface;
 import com.codehack.JungleConfig.Core.TypeConverter;
 import com.codehack.JungleConfig.DataModel.TypeMap;
@@ -26,9 +23,9 @@ public class JungleConfig {
                         new NativeInternalTransaction(
                                 new NativeInternalCache(
                                         new NativeConverter(
-                                                new NativeIOHandler(file)),
-                                        10, 100, true))),
-                true, getDefaultAdapters());
+                                                new NativeIOHandler(file)
+                                        ), 10, 100, true))
+                ), true, new NativeBooleanAdapter(), new NativeIntagerAdapter(), new NativeStringAdapter());
     }
 
     public JungleConfig(TypeConverter converter) {
@@ -42,46 +39,30 @@ public class JungleConfig {
                                 new NativeInternalCache(
                                         new NativeEncryptedConverter(
                                                 new NativeIOHandler(file),
-                                                password),
-                                        10, 100, true))),
-                true, getDefaultAdapters()));
+                                                password
+                                        ), 10, 100, true))
+                ), true, new NativeStringAdapter(), new NativeIntagerAdapter(), new NativeIntagerAdapter()
+        ));
     }
-
-    public static JungleConfig InMemoryConfig() {
+    public static JungleConfig InMemoryConfig(){
         return new JungleConfig(new NativeTypeConverter(
                 new NativeExtendedCache(
                         new NativeInternalTransaction(
                                 new NativeInternalCache(
                                         new NativeConverter(
-                                                new NativeInMemoryIOHandler()),
-                                        10, 100, true))),
-                true, getDefaultAdapters()));
+                                                new NativeInMemoryIOHandler()
+                                        ), 10, 100, true))
+                ), true, new NativeBooleanAdapter(), new NativeIntagerAdapter(), new NativeStringAdapter()));
     }
-
-    public static JungleConfig FlatJsonConfig() {
+    public static JungleConfig FlatJsonConfig(){
         return new JungleConfig(new NativeTypeConverter(
                 new NativeExtendedCache(
                         new NativeInternalTransaction(
                                 new NativeInternalCache(
                                         new NativeFlatJsonConverter(
-                                                new NativeInMemoryIOHandler()),
-                                        10, 100, true))),
-                true, getDefaultAdapters()));
-    }
-
-    private static TypeConverterAdapter[] getDefaultAdapters() {
-        return new TypeConverterAdapter[] {
-                new NativeBooleanAdapter(),
-                new NativeIntagerAdapter(),
-                new NativeStringAdapter(),
-                new NativeLongAdapter(),
-                new NativeDoubleAdapter(),
-                new NativeFloatAdapter(),
-                new NativeUUIDAdapter(),
-                new NativeLocalDateAdapter(),
-                new NativeLocalDateTimeAdapter(),
-                new NativeLocalTimeAdapter()
-        };
+                                                new NativeInMemoryIOHandler()
+                                        ), 10, 100, true))
+                ), true, new NativeBooleanAdapter(), new NativeIntagerAdapter(), new NativeStringAdapter()));
     }
 
     public JungleConfig Set(String key, Object data) {
@@ -146,8 +127,7 @@ public class JungleConfig {
         return converter.Backup(path, override);
     }
 
-    public TypeMap<String, String, String> query(boolean iKey, String keyReg, boolean iType, String typeReg,
-            boolean iVal, String valReg) {
+    public TypeMap<String, String, String> query(boolean iKey, String keyReg, boolean iType, String typeReg, boolean iVal, String valReg) {
         return converter.query(iKey, keyReg, iType, typeReg, iVal, valReg);
     }
 
